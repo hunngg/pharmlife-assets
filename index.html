@@ -46,7 +46,12 @@
       line-height: 1.55;
       -webkit-font-smoothing: antialiased;
     }
-    .wrap { max-width: 720px; margin: 0 auto; padding: 32px 16px 60px; }
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      /* env(safe-area-inset-top) 避免加入主畫面全螢幕模式時，內容被狀態列(時間/電量)遮住 */
+      padding: calc(32px + env(safe-area-inset-top, 0px)) 16px calc(60px + env(safe-area-inset-bottom, 0px));
+    }
     header { margin-bottom: 24px; }
     h1 { font-size: 1.5rem; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.2px; }
     header p { margin: 0; color: var(--text-muted); font-size: 0.88rem; }
@@ -132,7 +137,7 @@
     footer { margin-top: 32px; text-align: center; color: var(--text-muted); font-size: 0.75rem; }
 
     @media (max-width: 480px) {
-      .wrap { padding: 24px 14px 48px; }
+      .wrap { padding: calc(24px + env(safe-area-inset-top, 0px)) 14px calc(48px + env(safe-area-inset-bottom, 0px)); }
       .grid { grid-template-columns: 1fr; }
     }
   </style>
