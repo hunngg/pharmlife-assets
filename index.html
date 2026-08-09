@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>PharmLife</title>
+
+  <!-- iPhone「加入主畫面」用：Q版藥師 icon + 全螢幕 App 化設定 -->
+  <link rel="apple-touch-icon" href="https://hunngg.github.io/pharmlife-assets/pharmlife-icon-180.png">
+  <link rel="icon" type="image/png" href="https://hunngg.github.io/pharmlife-assets/pharmlife-icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PharmLife">
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --card-bg: #ffffff;
+      --border: #e4e4e0;
+      --text: #1f2328;
+      --text-muted: #6b7280;
+      --accent: #3b6ea5;
+      --accent-bg: #eaf1f8;
+      --tag-bg: #eef0f2;
+      --radius: 10px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #16181c;
+        --card-bg: #1e2127;
+        --border: #2c3038;
+        --text: #e6e8eb;
+        --text-muted: #9aa1ab;
+        --accent: #7fb0e6;
+        --accent-bg: #223245;
+        --tag-bg: #262a31;
+        --shadow: 0 1px 3px rgba(0,0,0,0.3);
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 32px 16px 60px; }
+    header { margin-bottom: 24px; }
+    h1 { font-size: 1.5rem; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.2px; }
+    header p { margin: 0; color: var(--text-muted); font-size: 0.88rem; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .card.active:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .card.disabled { opacity: 0.6; cursor: default; }
+
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .card-name { font-size: 1.02rem; font-weight: 600; }
+    .badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: var(--tag-bg);
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .card-desc { font-size: 0.85rem; color: var(--text-muted); }
+    .card-stat {
+      margin-top: auto;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-bg);
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 8px;
+      width: fit-content;
+    }
+    .card-stat.skeleton {
+      color: transparent;
+      background: var(--tag-bg);
+      border-radius: 6px;
+      width: 80px;
+      height: 1.4em;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    footer { margin-top: 32px; text-align: center; color: var(--text-muted); font-size: 0.75rem; }
+
+    @media (max-width: 480px) {
+      .wrap { padding: 24px 14px 48px; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>PharmLife</h1>
+      <p>個人工作知識平台</p>
+    </header>
+
+    <div class="grid" id="tool-grid"></div>
+
+    <footer>共 <span id="tool-count">0</span> 項工具 · 之後會持續擴充</footer>
+  </div>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwbrwsQhfmS-ax0w7swR7ZoFZmjEQE6ircgsdzNI7mOQZVoxRE1HGDNtBfXku994JZt/exec';
+
+    const TOOLS = [
+      {
+        key: 'worklog',
+        name: '工作紀錄',
+        desc: '快速記錄工作活動，年底自評一鍵匯出',
+        url: 'https://hunngg.github.io/work-log/',
+        loadStat: async () => {
+          const res = await fetch(`${API_URL}?module=worklog&action=list`);
+          const json = await res.json();
+          if (!json.ok) throw new Error(json.error);
+          const year = new Date().getFullYear();
+          const count = json.records.filter(r => new Date(r.date).getFullYear() === year).length;
+          return `今年累計 ${count} 筆`;
+        },
+      },
+      {
+        key: 'maintenance',
+        name: '維持稽核',
+        desc: '年度維持/晉升所需文件備齊狀態總覽',
+        url: `${API_URL}?page=maintenance`,
+        loadStat: async () => {
+          const res = await fetch(`${API_URL}?module=maintenance&action=list`);
+          const json = await res.json();
+          if (!json.ok) throw new Error(json.error);
+          if (json.records.length === 0) return '尚未同步資料';
+          const pending = json.records.filter(r => r.status !== 'Ready').length;
+          return pending === 0 ? '全部已備妥' : `還有 ${pending} 項待處理`;
+        },
+      },
+      {
+        key: 'leverage',
+        name: '資產槓桿',
+        desc: '股市/現金部位配置與總曝險倍率',
+        url: 'https://hunngg.github.io/leverage-calc/',
+        loadStat: async () => {
+          const res = await fetch(`${API_URL}?module=leverage&action=list`);
+          const json = await res.json();
+          if (!json.ok) throw new Error(json.error);
+          if (json.records.length === 0) return '尚未同步資料';
+          const r = json.records[0];
+          const stockPct = Number(r.stockPct);
+          const cashPct = Number(r.cashPct);
+          const ratio = r.exposureRatio !== '' && r.exposureRatio !== null && !isNaN(Number(r.exposureRatio))
+            ? Number(r.exposureRatio).toFixed(2) + 'x' : '—';
+          return `股市 ${stockPct.toFixed(0)}% · 現金 ${cashPct.toFixed(0)}% · 曝險 ${ratio}`;
+        },
+      },
+    ];
+
+    function renderCard(tool) {
+      const tag = tool.url ? 'a' : 'div';
+      const hrefAttr = tool.url ? `href="${tool.url}" target="_blank" rel="noopener"` : '';
+      const statHtml = tool.comingSoon
+        ? `<span class="badge">即將推出</span>`
+        : `<span class="card-stat skeleton" data-stat-for="${tool.key}"></span>`;
+
+      return `
+        <${tag} class="card ${tool.comingSoon ? 'disabled' : 'active'}" ${hrefAttr}>
+          <div class="card-top">
+            <span class="card-name">${tool.name}</span>
+          </div>
+          <span class="card-desc">${tool.desc}</span>
+          ${statHtml}
+        </${tag}>`;
+    }
+
+    async function init() {
+      const grid = document.getElementById('tool-grid');
+      grid.innerHTML = TOOLS.map(renderCard).join('');
+      document.getElementById('tool-count').textContent = TOOLS.length;
+
+      for (const tool of TOOLS) {
+        if (!tool.loadStat) continue;
+        const el = grid.querySelector(`[data-stat-for="${tool.key}"]`);
+        try {
+          const text = await tool.loadStat();
+          el.textContent = text;
+          el.classList.remove('skeleton');
+        } catch (e) {
+          el.textContent = '無法載入';
+          el.classList.remove('skeleton');
+        }
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
