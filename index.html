@@ -218,6 +218,10 @@
       border-radius: 50%;
       flex-shrink: 0;
     }
+    .day-dot.memo-dot {
+      background: #f5e400;
+      box-shadow: 0 0 3px rgba(245, 228, 0, 0.9); /* 螢光感 */
+    }
     .cal-stat-row { margin-top: 12px; text-align: center; font-size: 0.85rem; color: var(--text-muted); }
     .cal-stat-row b { color: var(--accent); }
 
@@ -305,6 +309,65 @@
       cursor: pointer;
     }
 
+    /* ===== 備忘錄 ===== */
+    .memo-add-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .memo-add-row .form-input { flex: 1; }
+    .memo-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    .memo-item:last-of-type { border-bottom: none; }
+    .memo-text { cursor: pointer; flex: 1; word-break: break-word; }
+    .memo-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+    .memo-date-tag {
+      font-size: 0.72rem;
+      color: var(--accent);
+      background: var(--accent-bg);
+      padding: 2px 8px;
+      border-radius: 20px;
+      white-space: nowrap;
+      margin-right: 2px;
+    }
+    .memo-icon-btn {
+      border: none; background: none; font-size: 0.95rem; cursor: pointer;
+      padding: 4px 6px; border-radius: 6px; opacity: 0.4;
+    }
+    .memo-icon-btn.linked { opacity: 1; }
+    .memo-icon-btn:hover { background: var(--tag-bg); }
+    .memo-del {
+      border: none; background: none; color: var(--danger);
+      font-size: 1rem; cursor: pointer; padding: 4px 6px;
+    }
+
+    /* ===== 近期備忘小工具（只有3天內有連結日期的項目才會顯示）===== */
+    .upcoming-card {
+      background: var(--accent-bg);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 6px 14px;
+    }
+    .upcoming-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      font-size: 0.88rem;
+    }
+    .upcoming-item:not(:last-child) { border-bottom: 1px dashed var(--border); }
+    .upcoming-date {
+      font-weight: 700;
+      color: var(--accent);
+      min-width: 38px;
+      font-size: 0.82rem;
+      flex-shrink: 0;
+    }
+    .upcoming-text { word-break: break-word; }
+
     @media (max-width: 480px) {
       .wrap { padding: calc(24px + env(safe-area-inset-top, 0px)) 14px calc(48px + env(safe-area-inset-bottom, 0px)); }
       .grid { grid-template-columns: 1fr; }
@@ -315,8 +378,13 @@
   <div class="wrap">
     <header>
       <h1>PharmLife</h1>
-      <p>個人工作知識平台</p>
+      <p>Hung's Work & Life</p>
     </header>
+
+    <!-- ===== 近期備忘小工具：只有3天內有連結日期的備忘事項才會出現，平常不佔版面 ===== -->
+    <section id="upcoming-widget-section" style="display:none;">
+      <div id="upcoming-widget"></div>
+    </section>
 
     <!-- ===== 運動紀錄日曆 ===== -->
     <section>
@@ -335,6 +403,16 @@
       <div class="cal-stat-row" id="cal-stat-row"></div>
     </section>
 
+    <!-- ===== 備忘錄 ===== -->
+    <section>
+      <p class="section-title">備忘錄</p>
+      <div class="memo-add-row">
+        <input class="form-input" id="memo-input" placeholder="輸入備忘事項，按 Enter 或點新增...">
+        <button class="btn btn-secondary" id="btn-memo-add">新增</button>
+      </div>
+      <div id="memo-list"></div>
+    </section>
+
     <!-- ===== 工具卡片 ===== -->
     <section>
       <p class="section-title">工具</p>
@@ -347,6 +425,12 @@
   <dialog id="day-dialog">
     <div class="modal-body">
       <div class="modal-title" id="dialog-date-title"></div>
+
+      <div id="day-memo-section" style="display:none; margin-bottom:16px;">
+        <label class="form-label">備忘事項</label>
+        <div id="day-memo-list"></div>
+      </div>
+
       <div id="entry-list"></div>
       <button class="add-new-btn" id="btn-show-add">+ 記錄運動</button>
 
@@ -373,10 +457,26 @@
           <textarea class="form-textarea" id="note-input" placeholder="例如：操場慢跑"></textarea>
         </div>
         <button class="btn btn-primary" id="btn-save-entry">儲存</button>
+        <button class="btn btn-secondary" id="btn-cancel-edit-entry" style="display:none; width:100%; margin-top:8px;">取消編輯</button>
       </div>
 
       <div class="modal-actions">
         <button class="btn btn-secondary" id="btn-close-dialog">關閉</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="memo-date-dialog">
+    <div class="modal-body">
+      <div class="modal-title">加入日曆</div>
+      <div class="form-group">
+        <label class="form-label">選擇日期</label>
+        <input class="form-input" id="memo-date-input" type="date">
+      </div>
+      <button class="btn btn-primary" id="btn-memo-date-save">儲存</button>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="btn-memo-date-clear">移除連結</button>
+        <button class="btn btn-secondary" id="btn-memo-date-cancel">取消</button>
       </div>
     </div>
   </dialog>
@@ -424,7 +524,13 @@
       selectedDate: null,
       selectedType: null,
       selectedMuscles: [],
+      editingEntryId: null, // 非 null 代表目前在「編輯已存在的運動紀錄」模式，而不是新增
       showCustomTypeInput: false,
+    };
+
+    let memoState = {
+      items: [],
+      activeDateMemoId: null, // 目前正在編輯「連結日曆日期」的備忘 id
     };
 
     function pad2(n) { return String(n).padStart(2, '0'); }
@@ -466,7 +572,9 @@
         const isToday = ds === today ? 'today' : '';
         const dayRecords = calState.records.filter(r => r.date === ds);
         const colors = [...new Set(dayRecords.map(r => typeColor(r.type)))];
-        const dotsHtml = colors.map(c => `<span class="day-dot" style="background:${c}"></span>`).join('');
+        const hasMemo = memoState.items.some(m => m.dueDate === ds);
+        const dotsHtml = colors.map(c => `<span class="day-dot" style="background:${c}"></span>`).join('')
+          + (hasMemo ? `<span class="day-dot memo-dot" title="有備忘事項"></span>` : '');
         html += `
           <div class="day-cell ${isToday}" data-date="${ds}">
             <span class="day-num">${d}</span>
@@ -531,10 +639,15 @@
       calState.selectedDate = ds;
       calState.selectedType = null;
       calState.selectedMuscles = [];
+      calState.editingEntryId = null;
       calState.showCustomTypeInput = false;
       document.getElementById('dialog-date-title').textContent = ds;
       renderEntryList();
+      renderDayMemoSection();
       document.getElementById('add-form').style.display = 'none';
+      document.getElementById('btn-show-add').style.display = 'block';
+      document.getElementById('btn-save-entry').textContent = '儲存';
+      document.getElementById('btn-cancel-edit-entry').style.display = 'none';
       document.getElementById('new-type-row').style.display = 'none';
       document.getElementById('new-type-input').value = '';
       renderTypeGrid();
@@ -556,7 +669,7 @@
         const muscleText = e.muscleGroups ? ' · ' + e.muscleGroups.split(',').filter(Boolean).join('、') : '';
         return `
         <div class="entry-item">
-          <div>
+          <div data-edit-entry-id="${e.id}" style="cursor:pointer; flex:1;">
             <div class="entry-type">${e.type}</div>
             <div class="entry-meta">${e.minutes} 分鐘${muscleText}${e.note ? ' · ' + e.note : ''}</div>
           </div>
@@ -564,6 +677,53 @@
         </div>
       `;
       }).join('');
+    }
+
+    function openEditEntry(id) {
+      const entry = calState.records.find(r => r.id === id);
+      if (!entry) return;
+      calState.editingEntryId = id;
+      calState.selectedType = entry.type;
+      calState.selectedMuscles = entry.muscleGroups ? entry.muscleGroups.split(',').filter(Boolean) : [];
+      document.getElementById('add-form').style.display = 'block';
+      document.getElementById('btn-show-add').style.display = 'none';
+      document.getElementById('new-type-row').style.display = 'none';
+      document.getElementById('new-type-input').value = '';
+      renderTypeGrid();
+      updateMuscleSectionVisibility();
+      document.getElementById('minutes-input').value = entry.minutes;
+      renderMinutesPresetGrid();
+      document.getElementById('note-input').value = entry.note || '';
+      document.getElementById('btn-save-entry').textContent = '更新';
+      document.getElementById('btn-cancel-edit-entry').style.display = 'block';
+    }
+
+    function exitEditEntry() {
+      calState.editingEntryId = null;
+      calState.selectedType = null;
+      calState.selectedMuscles = [];
+      document.getElementById('add-form').style.display = 'none';
+      document.getElementById('btn-show-add').style.display = 'block';
+      document.getElementById('btn-save-entry').textContent = '儲存';
+      document.getElementById('btn-cancel-edit-entry').style.display = 'none';
+    }
+
+    // 這天有沒有「連結日曆」的備忘事項，有的話在日期對話框裡另外顯示一個區塊
+    function renderDayMemoSection() {
+      const section = document.getElementById('day-memo-section');
+      const items = memoState.items.filter(m => m.dueDate === calState.selectedDate);
+      if (items.length === 0) {
+        section.style.display = 'none';
+        document.getElementById('day-memo-list').innerHTML = '';
+        return;
+      }
+      section.style.display = 'block';
+      document.getElementById('day-memo-list').innerHTML = items.map(m => `
+        <div class="entry-item">
+          <div data-day-memo-complete="${m.id}" style="cursor:pointer; flex:1;">${escapeMemoHtml(m.text)}</div>
+          <button class="entry-del" data-day-memo-del="${m.id}" title="刪除">✕</button>
+        </div>
+      `).join('');
     }
 
     async function loadCalendarData() {
@@ -671,50 +831,269 @@
         if (!calState.selectedType) { alert('請選擇運動類型'); return; }
         if (!minutes || minutes <= 0) { alert('請輸入持續分鐘數'); return; }
         const btn = document.getElementById('btn-save-entry');
+        const isEditing = !!calState.editingEntryId;
         btn.disabled = true;
-        btn.textContent = '儲存中...';
+        btn.textContent = isEditing ? '更新中...' : '儲存中...';
         const muscleGroups = calState.selectedMuscles.join(',');
         try {
-          const { id } = await apiPost({
-            module: 'exercise', action: 'add',
-            date: calState.selectedDate, type: calState.selectedType, minutes, note, muscleGroups,
-          });
-          const now = new Date().toISOString();
-          calState.records.push({ id, date: calState.selectedDate, type: calState.selectedType, minutes, note, muscleGroups, createdAt: now, updatedAt: now });
-          renderEntryList();
-          renderCalendar();
-          document.getElementById('add-form').style.display = 'none';
+          if (isEditing) {
+            const id = calState.editingEntryId;
+            await apiPost({
+              module: 'exercise', action: 'update', id,
+              date: calState.selectedDate, type: calState.selectedType, minutes, note, muscleGroups,
+            });
+            const entry = calState.records.find(r => r.id === id);
+            if (entry) {
+              Object.assign(entry, { type: calState.selectedType, minutes, note, muscleGroups, updatedAt: new Date().toISOString() });
+            }
+            exitEditEntry();
+          } else {
+            const { id } = await apiPost({
+              module: 'exercise', action: 'add',
+              date: calState.selectedDate, type: calState.selectedType, minutes, note, muscleGroups,
+            });
+            const now = new Date().toISOString();
+            calState.records.push({ id, date: calState.selectedDate, type: calState.selectedType, minutes, note, muscleGroups, createdAt: now, updatedAt: now });
+            document.getElementById('add-form').style.display = 'none';
+            calState.selectedType = null;
+            calState.selectedMuscles = [];
+            document.getElementById('muscle-group-section').style.display = 'none';
+          }
           document.getElementById('minutes-input').value = '';
           renderMinutesPresetGrid();
           document.getElementById('note-input').value = '';
-          calState.selectedType = null;
-          calState.selectedMuscles = [];
-          document.getElementById('muscle-group-section').style.display = 'none';
-        } catch (e) {
-          alert('儲存失敗，請確認網路連線後再試一次');
-        } finally {
-          btn.disabled = false;
-          btn.textContent = '儲存';
-        }
-      });
-
-      document.getElementById('entry-list').addEventListener('click', async e => {
-        const btn = e.target.closest('[data-del-id]');
-        if (!btn) return;
-        if (!confirm('確定要刪除這筆運動紀錄嗎？')) return;
-        const id = btn.dataset.delId;
-        try {
-          await apiPost({ module: 'exercise', action: 'delete', id });
-          calState.records = calState.records.filter(r => r.id !== id);
           renderEntryList();
           renderCalendar();
         } catch (e) {
+          alert((isEditing ? '更新' : '儲存') + '失敗，請確認網路連線後再試一次');
+        } finally {
+          btn.disabled = false;
+          // 用當下的 calState.editingEntryId 而不是外面的 isEditing 變數：
+          // 編輯成功時 exitEditEntry() 已經把文字改回「儲存」，這裡不能用舊值又蓋回「更新」
+          btn.textContent = calState.editingEntryId ? '更新' : '儲存';
+        }
+      });
+
+      document.getElementById('btn-cancel-edit-entry').addEventListener('click', () => {
+        exitEditEntry();
+      });
+
+      document.getElementById('entry-list').addEventListener('click', async e => {
+        const delBtn = e.target.closest('[data-del-id]');
+        if (delBtn) {
+          if (!confirm('確定要刪除這筆運動紀錄嗎？')) return;
+          const id = delBtn.dataset.delId;
+          try {
+            await apiPost({ module: 'exercise', action: 'delete', id });
+            calState.records = calState.records.filter(r => r.id !== id);
+            if (calState.editingEntryId === id) exitEditEntry();
+            renderEntryList();
+            renderCalendar();
+          } catch (e) {
+            alert('刪除失敗，請確認網路連線後再試一次');
+          }
+          return;
+        }
+        const editEl = e.target.closest('[data-edit-entry-id]');
+        if (editEl) {
+          openEditEntry(editEl.dataset.editEntryId);
+        }
+      });
+
+      document.getElementById('day-memo-list').addEventListener('click', async e => {
+        const delBtn = e.target.closest('[data-day-memo-del]');
+        const completeEl = e.target.closest('[data-day-memo-complete]');
+        const id = (delBtn && delBtn.dataset.dayMemoDel) || (completeEl && completeEl.dataset.dayMemoComplete);
+        if (!id) return;
+        try {
+          await apiPost({ module: 'memos', action: 'delete', id });
+          memoState.items = memoState.items.filter(m => m.id !== id);
+          renderDayMemoSection();
+          renderMemoList();
+          renderUpcomingWidget();
+          renderCalendar();
+        } catch (err) {
           alert('刪除失敗，請確認網路連線後再試一次');
         }
       });
 
       document.getElementById('btn-close-dialog').addEventListener('click', () => {
         document.getElementById('day-dialog').close();
+      });
+    }
+
+    /* ========================================================
+     * 備忘錄
+     * ==================================================== */
+    function escapeMemoHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function fmtMemoDate(ds) {
+      const [, m, d] = ds.split('-');
+      return `${parseInt(m, 10)}/${parseInt(d, 10)}`;
+    }
+
+    function sortedMemos() {
+      // 有連結日期的排前面（依日期近到遠），沒連結日期的接在後面（依建立時間舊到新）
+      return memoState.items.slice().sort((a, b) => {
+        if (a.dueDate && b.dueDate) return a.dueDate < b.dueDate ? -1 : a.dueDate > b.dueDate ? 1 : 0;
+        if (a.dueDate) return -1;
+        if (b.dueDate) return 1;
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      });
+    }
+
+    function renderMemoList() {
+      const list = document.getElementById('memo-list');
+      const items = sortedMemos();
+      if (items.length === 0) {
+        list.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">目前沒有備忘事項</p>`;
+        return;
+      }
+      list.innerHTML = items.map(m => `
+        <div class="memo-item">
+          <span class="memo-text" data-memo-complete="${m.id}">${escapeMemoHtml(m.text)}</span>
+          <span class="memo-actions">
+            ${m.dueDate ? `<span class="memo-date-tag">📅 ${fmtMemoDate(m.dueDate)}</span>` : ''}
+            <button class="memo-icon-btn ${m.dueDate ? 'linked' : ''}" data-memo-cal="${m.id}" title="加入日曆">📅</button>
+            <button class="memo-del" data-memo-del="${m.id}" title="刪除">✕</button>
+          </span>
+        </div>
+      `).join('');
+    }
+
+    function renderUpcomingWidget() {
+      const section = document.getElementById('upcoming-widget-section');
+      const today = calTodayStr();
+      const todayDate = new Date(today + 'T00:00:00');
+      const cutoff = new Date(todayDate);
+      cutoff.setDate(cutoff.getDate() + 3);
+      const items = memoState.items
+        .filter(m => m.dueDate)
+        .filter(m => {
+          const d = new Date(m.dueDate + 'T00:00:00');
+          return d >= todayDate && d <= cutoff;
+        })
+        .sort((a, b) => a.dueDate < b.dueDate ? -1 : a.dueDate > b.dueDate ? 1 : 0);
+
+      if (items.length === 0) {
+        section.style.display = 'none';
+        document.getElementById('upcoming-widget').innerHTML = '';
+        return;
+      }
+      section.style.display = 'block';
+      document.getElementById('upcoming-widget').innerHTML = `
+        <p class="section-title">近期備忘</p>
+        <div class="upcoming-card">
+          ${items.map(m => `
+            <div class="upcoming-item">
+              <span class="upcoming-date">${fmtMemoDate(m.dueDate)}</span>
+              <span class="upcoming-text">${escapeMemoHtml(m.text)}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    async function loadMemoData() {
+      try {
+        memoState.items = await apiList('memos');
+      } catch (e) {
+        console.error(e);
+      }
+      renderMemoList();
+      renderUpcomingWidget();
+      renderCalendar(); // 補畫一次日曆，讓備忘的螢光黃圓點也一起顯示（跟運動資料是各自非同步載入的）
+    }
+
+    function openMemoDateDialog(id) {
+      memoState.activeDateMemoId = id;
+      const memo = memoState.items.find(m => m.id === id);
+      document.getElementById('memo-date-input').value = (memo && memo.dueDate) || '';
+      document.getElementById('memo-date-dialog').showModal();
+    }
+
+    async function removeMemo(id) {
+      try {
+        await apiPost({ module: 'memos', action: 'delete', id });
+        memoState.items = memoState.items.filter(m => m.id !== id);
+        renderMemoList();
+        renderUpcomingWidget();
+        renderCalendar();
+        if (calState.selectedDate) renderDayMemoSection();
+      } catch (e) {
+        alert('刪除失敗，請確認網路連線後再試一次');
+      }
+    }
+
+    async function saveMemoDate(dateVal) {
+      const id = memoState.activeDateMemoId;
+      if (!id) return;
+      const btn = document.getElementById('btn-memo-date-save');
+      btn.disabled = true;
+      try {
+        await apiPost({ module: 'memos', action: 'update', id, dueDate: dateVal });
+        const memo = memoState.items.find(m => m.id === id);
+        if (memo) { memo.dueDate = dateVal; memo.updatedAt = new Date().toISOString(); }
+        renderMemoList();
+        renderUpcomingWidget();
+        renderCalendar();
+        if (calState.selectedDate) renderDayMemoSection();
+        document.getElementById('memo-date-dialog').close();
+      } catch (e) {
+        alert('更新失敗，請確認網路連線後再試一次');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function setupMemoEvents() {
+      async function addMemoFromInput() {
+        const input = document.getElementById('memo-input');
+        const text = input.value.trim();
+        if (!text) return;
+        const btn = document.getElementById('btn-memo-add');
+        btn.disabled = true;
+        try {
+          const { id } = await apiPost({ module: 'memos', action: 'add', text });
+          const now = new Date().toISOString();
+          memoState.items.push({ id, text, dueDate: '', createdAt: now, updatedAt: now });
+          input.value = '';
+          renderMemoList();
+        } catch (e) {
+          alert('新增備忘失敗，請確認網路連線');
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      document.getElementById('btn-memo-add').addEventListener('click', addMemoFromInput);
+      document.getElementById('memo-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter') addMemoFromInput();
+      });
+
+      document.getElementById('memo-list').addEventListener('click', e => {
+        const calBtn = e.target.closest('[data-memo-cal]');
+        if (calBtn) { openMemoDateDialog(calBtn.dataset.memoCal); return; }
+        const delBtn = e.target.closest('[data-memo-del]');
+        if (delBtn) { removeMemo(delBtn.dataset.memoDel); return; }
+        const textEl = e.target.closest('[data-memo-complete]');
+        if (textEl) { removeMemo(textEl.dataset.memoComplete); }
+      });
+
+      document.getElementById('btn-memo-date-cancel').addEventListener('click', () => {
+        document.getElementById('memo-date-dialog').close();
+      });
+      document.getElementById('btn-memo-date-save').addEventListener('click', () => {
+        const dateVal = document.getElementById('memo-date-input').value;
+        if (!dateVal) { alert('請選擇日期'); return; }
+        saveMemoDate(dateVal);
+      });
+      document.getElementById('btn-memo-date-clear').addEventListener('click', () => {
+        saveMemoDate('');
       });
     }
 
@@ -839,6 +1218,8 @@
     setupCalendarSwipe();
     setupCalendarEvents();
     loadCalendarData();
+    setupMemoEvents();
+    loadMemoData();
     initTools();
   </script>
 </body>
