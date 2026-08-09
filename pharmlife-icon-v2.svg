@@ -11,12 +11,9 @@
   <!-- 內搭條紋襯衫領口 -->
   <path d="M232 322 L256 366 L280 322 L268 306 L256 320 L244 306 Z" fill="#c7d3e0"/>
 
-  <!-- 抱胸手臂（左右交疊） -->
-  <path d="M150 430 Q220 460 290 434 L296 466 Q220 496 146 462 Z" fill="#f3f5f7" stroke="#d8dee5" stroke-width="3"/>
-  <path d="M362 430 Q292 460 222 434 L216 466 Q292 496 366 462 Z" fill="#ffffff" stroke="#d8dee5" stroke-width="3"/>
-  <!-- 手 -->
-  <circle cx="296" cy="452" r="16" fill="#ffd9ae"/>
-  <circle cx="216" cy="452" r="16" fill="#ffd9ae"/>
+  <!-- 手臂自然垂放（外側縫線示意），不再抱胸 -->
+  <path d="M158 400 Q150 460 156 512" fill="none" stroke="#d8dee5" stroke-width="3"/>
+  <path d="M354 400 Q362 460 356 512" fill="none" stroke="#d8dee5" stroke-width="3"/>
 
   <!-- 識別證吊牌 -->
   <rect x="238" y="368" width="36" height="48" rx="4" fill="#ffffff" stroke="#c7d3e0" stroke-width="2"/>
@@ -38,10 +35,16 @@
   <!-- 臉 -->
   <circle cx="256" cy="212" r="104" fill="#ffd9ae"/>
 
-  <!-- 短髮（貼頭髮型，不是帽子） -->
-  <path d="M150 195 Q145 100 256 96 Q367 100 362 195 Q350 130 256 128 Q162 130 150 195 Z" fill="#241f1c"/>
-  <path d="M150 190 Q152 165 165 190 Z" fill="#241f1c"/>
-  <path d="M362 190 Q360 165 347 190 Z" fill="#241f1c"/>
+  <!-- 短髮（貼頭髮型，不是帽子）—— 加厚瀏海，但不蓋到眼鏡 -->
+  <path d="M132 205 Q124 78 256 76 Q388 78 380 205 Q374 150 256 146 Q138 150 132 205 Z" fill="#241f1c"/>
+  <!-- 瀏海髮束紋理（短一點，停在眉毛上方） -->
+  <path d="M170 150 L178 168 L188 148 Z" fill="#241f1c"/>
+  <path d="M206 146 L214 166 L224 145 Z" fill="#241f1c"/>
+  <path d="M242 145 L250 164 L260 145 Z" fill="#241f1c"/>
+  <path d="M278 145 L286 164 L296 146 Z" fill="#241f1c"/>
+  <path d="M314 148 L322 166 L332 150 Z" fill="#241f1c"/>
+  <path d="M144 200 Q146 168 160 192 Z" fill="#241f1c"/>
+  <path d="M368 200 Q366 168 352 192 Z" fill="#241f1c"/>
 
   <!-- 腮紅 -->
   <ellipse cx="196" cy="238" rx="18" ry="11" fill="#ff9d8a" opacity="0.45"/>
@@ -60,6 +63,7 @@
   <circle cx="216" cy="208" r="3" fill="#ffffff"/>
   <circle cx="304" cy="208" r="3" fill="#ffffff"/>
 
-  <!-- 微笑（閉唇、跟照片一致） -->
-  <path d="M228 258 Q256 270 284 258" stroke="#a5583f" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <!-- 露齒笑 -->
+  <path d="M220 251 Q256 246 292 251 Q288 284 256 288 Q224 284 220 251 Z"
+        fill="#ffffff" stroke="#a5583f" stroke-width="5" stroke-linejoin="round"/>
 </svg>
