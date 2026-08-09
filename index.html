@@ -359,6 +359,10 @@
             <button class="btn btn-secondary" id="btn-add-type">新增</button>
           </div>
         </div>
+        <div class="form-group" id="muscle-group-section" style="display:none;">
+          <label class="form-label">訓練部位（可複選）</label>
+          <div class="type-grid" id="muscle-grid"></div>
+        </div>
         <div class="form-group">
           <label class="form-label">持續時間（分鐘）</label>
           <input class="form-input" id="minutes-input" type="number" inputmode="numeric" placeholder="30">
@@ -401,6 +405,10 @@
       return TYPE_COLORS[type] || '#9aa5b1'; // 自訂類型預設跟「其他」同一色
     }
 
+    // 重訓/健工教練課才會多跳出這一層訓練部位選單（可複選）
+    const MUSCLE_GROUP_TYPES = ['重訓', '健工教練課'];
+    const MUSCLE_GROUPS = ['推', '拉', '腿', '肩', '胸', '背', '二頭', '三頭', '核心', '腹', '功能性與協調'];
+
     let calState = {
       records: [],
       customTypes: [],
@@ -408,6 +416,7 @@
       month: new Date().getMonth(),
       selectedDate: null,
       selectedType: null,
+      selectedMuscles: [],
       showCustomTypeInput: false,
     };
 
@@ -485,9 +494,28 @@
       grid.innerHTML = chips + otherChip;
     }
 
+    function renderMuscleGrid() {
+      const grid = document.getElementById('muscle-grid');
+      grid.innerHTML = MUSCLE_GROUPS.map(m =>
+        `<button type="button" class="type-chip ${calState.selectedMuscles.includes(m) ? 'selected' : ''}" data-muscle="${m}">${m}</button>`
+      ).join('');
+    }
+
+    function updateMuscleSectionVisibility() {
+      const section = document.getElementById('muscle-group-section');
+      if (MUSCLE_GROUP_TYPES.includes(calState.selectedType)) {
+        section.style.display = 'block';
+        renderMuscleGrid();
+      } else {
+        section.style.display = 'none';
+        calState.selectedMuscles = [];
+      }
+    }
+
     function openDayDialog(ds) {
       calState.selectedDate = ds;
       calState.selectedType = null;
+      calState.selectedMuscles = [];
       calState.showCustomTypeInput = false;
       document.getElementById('dialog-date-title').textContent = ds;
       renderEntryList();
@@ -495,6 +523,7 @@
       document.getElementById('new-type-row').style.display = 'none';
       document.getElementById('new-type-input').value = '';
       renderTypeGrid();
+      document.getElementById('muscle-group-section').style.display = 'none';
       document.getElementById('minutes-input').value = '';
       document.getElementById('note-input').value = '';
       document.getElementById('day-dialog').showModal();
@@ -507,15 +536,18 @@
         list.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">這天還沒有紀錄</p>`;
         return;
       }
-      list.innerHTML = entries.map(e => `
+      list.innerHTML = entries.map(e => {
+        const muscleText = e.muscleGroups ? ' · ' + e.muscleGroups.split(',').filter(Boolean).join('、') : '';
+        return `
         <div class="entry-item">
           <div>
             <div class="entry-type">${e.type}</div>
-            <div class="entry-meta">${e.minutes} 分鐘${e.note ? ' · ' + e.note : ''}</div>
+            <div class="entry-meta">${e.minutes} 分鐘${muscleText}${e.note ? ' · ' + e.note : ''}</div>
           </div>
           <button class="entry-del" data-del-id="${e.id}" title="刪除">✕</button>
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
 
     async function loadCalendarData() {
@@ -569,6 +601,17 @@
         if (!chip) return;
         calState.selectedType = chip.dataset.type;
         renderTypeGrid();
+        updateMuscleSectionVisibility();
+      });
+
+      document.getElementById('muscle-grid').addEventListener('click', e => {
+        const chip = e.target.closest('.type-chip');
+        if (!chip) return;
+        const m = chip.dataset.muscle;
+        const idx = calState.selectedMuscles.indexOf(m);
+        if (idx === -1) calState.selectedMuscles.push(m);
+        else calState.selectedMuscles.splice(idx, 1);
+        renderMuscleGrid();
       });
 
       document.getElementById('btn-add-type').addEventListener('click', async () => {
@@ -578,6 +621,7 @@
         if (allExerciseTypes().includes(name)) {
           calState.selectedType = name;
           renderTypeGrid();
+          updateMuscleSectionVisibility();
           input.value = '';
           document.getElementById('new-type-row').style.display = 'none';
           return;
@@ -587,6 +631,7 @@
           calState.customTypes.push(name);
           calState.selectedType = name;
           renderTypeGrid();
+          updateMuscleSectionVisibility();
           input.value = '';
           document.getElementById('new-type-row').style.display = 'none';
         } catch (e) {
@@ -601,19 +646,22 @@
         if (!minutes || minutes <= 0) { alert('請輸入持續分鐘數'); return; }
         const btn = document.getElementById('btn-save-entry');
         btn.disabled = true;
+        const muscleGroups = calState.selectedMuscles.join(',');
         try {
           const { id } = await apiPost({
             module: 'exercise', action: 'add',
-            date: calState.selectedDate, type: calState.selectedType, minutes, note,
+            date: calState.selectedDate, type: calState.selectedType, minutes, note, muscleGroups,
           });
           const now = new Date().toISOString();
-          calState.records.push({ id, date: calState.selectedDate, type: calState.selectedType, minutes, note, createdAt: now, updatedAt: now });
+          calState.records.push({ id, date: calState.selectedDate, type: calState.selectedType, minutes, note, muscleGroups, createdAt: now, updatedAt: now });
           renderEntryList();
           renderCalendar();
           document.getElementById('add-form').style.display = 'none';
           document.getElementById('minutes-input').value = '';
           document.getElementById('note-input').value = '';
           calState.selectedType = null;
+          calState.selectedMuscles = [];
+          document.getElementById('muscle-group-section').style.display = 'none';
         } catch (e) {
           alert('儲存失敗，請確認網路連線後再試一次');
         } finally {
