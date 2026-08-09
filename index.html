@@ -649,6 +649,19 @@
           return { text: `曝險倍率 ${ratio}`, stockPct: hasAlloc ? stockPct : null, cashPct: hasAlloc ? cashPct : null };
         },
       },
+      {
+        key: 'inbox',
+        name: '蒐集箱',
+        desc: '隨手記錄照片/檔案＋筆記，有空再處理',
+        url: `${API_URL}?page=inbox`,
+        loadStat: async () => {
+          const res = await fetch(`${API_URL}?module=inbox&action=list`);
+          const json = await res.json();
+          if (!json.ok) throw new Error(json.error);
+          const pending = json.records.filter(r => r.status === 'pending').length;
+          return pending === 0 ? '目前沒有待處理項目' : `待處理 ${pending} 筆`;
+        },
+      },
     ];
 
     function renderCard(tool) {
