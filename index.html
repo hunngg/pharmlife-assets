@@ -105,6 +105,30 @@
     }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
 
+    /* 資產配置比例橫條（呼應計算機工具本身的長條圖呈現方式） */
+    .alloc-bar { margin-top: auto; width: 100%; }
+    .alloc-bar-track {
+      display: flex;
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      background: var(--tag-bg);
+    }
+    .alloc-bar-fill { height: 100%; transition: width 0.4s ease; }
+    .alloc-bar-fill.stock { background: var(--accent); }
+    .alloc-bar-fill.cash { background: #9aa5b1; }
+    .alloc-bar-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 5px;
+    }
+    .alloc-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+    .alloc-dot.stock { background: var(--accent); }
+    .alloc-dot.cash { background: #9aa5b1; }
+
     footer { margin-top: 32px; text-align: center; color: var(--text-muted); font-size: 0.75rem; }
 
     @media (max-width: 480px) {
@@ -162,17 +186,19 @@
         name: '資產槓桿',
         desc: '股市/現金部位配置與總曝險倍率',
         url: 'https://hunngg.github.io/leverage-calc/',
+        visualBar: true, // 用長條圖呈現，呼應計算機工具本身的視覺風格
         loadStat: async () => {
           const res = await fetch(`${API_URL}?module=leverage&action=list`);
           const json = await res.json();
           if (!json.ok) throw new Error(json.error);
-          if (json.records.length === 0) return '尚未同步資料';
+          if (json.records.length === 0) return { text: '尚未同步資料' };
           const r = json.records[0];
           const stockPct = Number(r.stockPct);
           const cashPct = Number(r.cashPct);
+          const hasAlloc = !isNaN(stockPct) && !isNaN(cashPct);
           const ratio = r.exposureRatio !== '' && r.exposureRatio !== null && !isNaN(Number(r.exposureRatio))
             ? Number(r.exposureRatio).toFixed(2) + 'x' : '—';
-          return `股市 ${stockPct.toFixed(0)}% · 現金 ${cashPct.toFixed(0)}% · 曝險 ${ratio}`;
+          return { text: `曝險倍率 ${ratio}`, stockPct: hasAlloc ? stockPct : null, cashPct: hasAlloc ? cashPct : null };
         },
       },
     ];
@@ -182,7 +208,7 @@
       const hrefAttr = tool.url ? `href="${tool.url}" target="_blank" rel="noopener"` : '';
       const statHtml = tool.comingSoon
         ? `<span class="badge">即將推出</span>`
-        : `<span class="card-stat skeleton" data-stat-for="${tool.key}"></span>`;
+        : `<div data-stat-for="${tool.key}"><span class="card-stat skeleton"></span></div>`;
 
       return `
         <${tag} class="card ${tool.comingSoon ? 'disabled' : 'active'}" ${hrefAttr}>
@@ -194,6 +220,21 @@
         </${tag}>`;
     }
 
+    function allocBarHtml(stockPct, cashPct) {
+      if (stockPct == null || cashPct == null) return '';
+      return `
+        <div class="alloc-bar">
+          <div class="alloc-bar-track">
+            <div class="alloc-bar-fill stock" style="width:${stockPct}%"></div>
+            <div class="alloc-bar-fill cash" style="width:${cashPct}%"></div>
+          </div>
+          <div class="alloc-bar-labels">
+            <span><span class="alloc-dot stock"></span>股市 ${stockPct.toFixed(0)}%</span>
+            <span><span class="alloc-dot cash"></span>現金 ${cashPct.toFixed(0)}%</span>
+          </div>
+        </div>`;
+    }
+
     async function init() {
       const grid = document.getElementById('tool-grid');
       grid.innerHTML = TOOLS.map(renderCard).join('');
@@ -201,14 +242,14 @@
 
       for (const tool of TOOLS) {
         if (!tool.loadStat) continue;
-        const el = grid.querySelector(`[data-stat-for="${tool.key}"]`);
+        const container = grid.querySelector(`[data-stat-for="${tool.key}"]`);
         try {
-          const text = await tool.loadStat();
-          el.textContent = text;
-          el.classList.remove('skeleton');
+          const result = await tool.loadStat();
+          const { text, stockPct, cashPct } = typeof result === 'string' ? { text: result } : result;
+          container.innerHTML = `<span class="card-stat">${text}</span>` +
+            (tool.visualBar ? allocBarHtml(stockPct, cashPct) : '');
         } catch (e) {
-          el.textContent = '無法載入';
-          el.classList.remove('skeleton');
+          container.innerHTML = `<span class="card-stat">無法載入</span>`;
         }
       }
     }
