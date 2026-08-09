@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- 背景：平台主色 -->
+  <rect width="512" height="512" fill="#3b6ea5"/>
+
+  <!-- 白袍身體（有翻領的西裝式領口，不是立領） -->
+  <path d="M138 512 L158 344 Q256 300 354 344 L374 512 Z" fill="#ffffff" stroke="#d8dee5" stroke-width="4"/>
+
+  <!-- 領子（翻領，V字開口） -->
+  <path d="M198 340 L256 420 L222 300 Z" fill="#dfe6ee"/>
+  <path d="M314 340 L256 420 L290 300 Z" fill="#dfe6ee"/>
+  <!-- 內搭條紋襯衫領口 -->
+  <path d="M232 322 L256 366 L280 322 L268 306 L256 320 L244 306 Z" fill="#c7d3e0"/>
+
+  <!-- 抱胸手臂（左右交疊） -->
+  <path d="M150 430 Q220 460 290 434 L296 466 Q220 496 146 462 Z" fill="#f3f5f7" stroke="#d8dee5" stroke-width="3"/>
+  <path d="M362 430 Q292 460 222 434 L216 466 Q292 496 366 462 Z" fill="#ffffff" stroke="#d8dee5" stroke-width="3"/>
+  <!-- 手 -->
+  <circle cx="296" cy="452" r="16" fill="#ffd9ae"/>
+  <circle cx="216" cy="452" r="16" fill="#ffd9ae"/>
+
+  <!-- 識別證吊牌 -->
+  <rect x="238" y="368" width="36" height="48" rx="4" fill="#ffffff" stroke="#c7d3e0" stroke-width="2"/>
+  <circle cx="256" cy="380" r="8" fill="#cfe0d8"/>
+  <rect x="246" y="392" width="20" height="4" rx="2" fill="#c7d3e0"/>
+  <rect x="246" y="400" width="20" height="4" rx="2" fill="#c7d3e0"/>
+  <!-- 醫院徽章別針 -->
+  <circle cx="222" cy="352" r="9" fill="#4caf7d"/>
+  <!-- 口袋筆 -->
+  <rect x="300" y="360" width="6" height="30" rx="2" fill="#3b6ea5"/>
+
+  <!-- 脖子 -->
+  <rect x="236" y="296" width="40" height="36" fill="#ffd9ae"/>
+
+  <!-- 耳朵 -->
+  <circle cx="168" cy="222" r="18" fill="#ffd9ae"/>
+  <circle cx="344" cy="222" r="18" fill="#ffd9ae"/>
+
+  <!-- 臉 -->
+  <circle cx="256" cy="212" r="104" fill="#ffd9ae"/>
+
+  <!-- 短髮（貼頭髮型，不是帽子） -->
+  <path d="M150 195 Q145 100 256 96 Q367 100 362 195 Q350 130 256 128 Q162 130 150 195 Z" fill="#241f1c"/>
+  <path d="M150 190 Q152 165 165 190 Z" fill="#241f1c"/>
+  <path d="M362 190 Q360 165 347 190 Z" fill="#241f1c"/>
+
+  <!-- 腮紅 -->
+  <ellipse cx="196" cy="238" rx="18" ry="11" fill="#ff9d8a" opacity="0.45"/>
+  <ellipse cx="316" cy="238" rx="18" ry="11" fill="#ff9d8a" opacity="0.45"/>
+
+  <!-- 眼鏡（圓框） -->
+  <circle cx="212" cy="210" r="34" fill="none" stroke="#2c2320" stroke-width="7"/>
+  <circle cx="300" cy="210" r="34" fill="none" stroke="#2c2320" stroke-width="7"/>
+  <line x1="246" y1="208" x2="266" y2="208" stroke="#2c2320" stroke-width="6"/>
+  <line x1="178" y1="205" x2="160" y2="200" stroke="#2c2320" stroke-width="6"/>
+  <line x1="334" y1="205" x2="352" y2="200" stroke="#2c2320" stroke-width="6"/>
+
+  <!-- 眼睛 -->
+  <circle cx="212" cy="212" r="9" fill="#2c2320"/>
+  <circle cx="300" cy="212" r="9" fill="#2c2320"/>
+  <circle cx="216" cy="208" r="3" fill="#ffffff"/>
+  <circle cx="304" cy="208" r="3" fill="#ffffff"/>
+
+  <!-- 微笑（閉唇、跟照片一致） -->
+  <path d="M228 258 Q256 270 284 258" stroke="#a5583f" stroke-width="6" fill="none" stroke-linecap="round"/>
+</svg>
