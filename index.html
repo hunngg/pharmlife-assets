@@ -206,6 +206,22 @@
           return { text: `曝險倍率 ${ratio}`, stockPct: hasAlloc ? stockPct : null, cashPct: hasAlloc ? cashPct : null };
         },
       },
+      {
+        key: 'exercise',
+        name: '運動紀錄',
+        desc: '左右滑動月曆，記錄每天的運動類型與時間',
+        url: `${API_URL}?page=exercise`,
+        loadStat: async () => {
+          const res = await fetch(`${API_URL}?module=exercise&action=list`);
+          const json = await res.json();
+          if (!json.ok) throw new Error(json.error);
+          if (json.records.length === 0) return '尚未有紀錄';
+          const now = new Date();
+          const prefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+          const monthDays = new Set(json.records.filter(r => r.date.startsWith(prefix)).map(r => r.date)).size;
+          return `本月已運動 ${monthDays} 天`;
+        },
+      },
     ];
 
     function renderCard(tool) {
@@ -230,8 +246,8 @@
       return `
         <div class="alloc-bar">
           <div class="alloc-bar-track">
-            <div class="alloc-bar-fill stock" style="width:${stockPct}%"></div>
-            <div class="alloc-bar-fill cash" style="width:${cashPct}%"></div>
+            <div class="alloc-bar-fill stock" style="width:${stockPct.toFixed(1)}%"></div>
+            <div class="alloc-bar-fill cash" style="width:${cashPct.toFixed(1)}%"></div>
           </div>
           <div class="alloc-bar-labels">
             <span><span class="alloc-dot stock"></span>股市 ${stockPct.toFixed(0)}%</span>
