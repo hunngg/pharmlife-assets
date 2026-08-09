@@ -364,8 +364,9 @@
           <div class="type-grid" id="muscle-grid"></div>
         </div>
         <div class="form-group">
-          <label class="form-label">持續時間（分鐘）</label>
-          <input class="form-input" id="minutes-input" type="number" inputmode="numeric" placeholder="30">
+          <label class="form-label">持續時間</label>
+          <div class="type-grid" id="minutes-preset-grid"></div>
+          <input class="form-input" id="minutes-input" type="number" inputmode="numeric" placeholder="或直接輸入分鐘數，例如 40" style="margin-top:8px;">
         </div>
         <div class="form-group">
           <label class="form-label">備註（可留空）</label>
@@ -408,6 +409,12 @@
     // 重訓/健工教練課才會多跳出這一層訓練部位選單（可複選）
     const MUSCLE_GROUP_TYPES = ['重訓', '健工教練課'];
     const MUSCLE_GROUPS = ['推', '拉', '腿', '肩', '胸', '背', '二頭', '三頭', '核心', '腹', '功能性與協調'];
+
+    // 持續時間快速選項（0.5/1/1.5/2 小時），跟下方手動輸入分鐘數並存，點選會直接帶入輸入框
+    const MINUTES_PRESETS = [30, 60, 90, 120];
+    function presetLabel(min) {
+      return `${min / 60}小時`; // 30→0.5小時, 60→1小時, 90→1.5小時, 120→2小時
+    }
 
     let calState = {
       records: [],
@@ -501,6 +508,14 @@
       ).join('');
     }
 
+    function renderMinutesPresetGrid() {
+      const grid = document.getElementById('minutes-preset-grid');
+      const current = parseInt(document.getElementById('minutes-input').value, 10);
+      grid.innerHTML = MINUTES_PRESETS.map(m =>
+        `<button type="button" class="type-chip ${current === m ? 'selected' : ''}" data-minutes="${m}">${presetLabel(m)}</button>`
+      ).join('');
+    }
+
     function updateMuscleSectionVisibility() {
       const section = document.getElementById('muscle-group-section');
       if (MUSCLE_GROUP_TYPES.includes(calState.selectedType)) {
@@ -525,6 +540,7 @@
       renderTypeGrid();
       document.getElementById('muscle-group-section').style.display = 'none';
       document.getElementById('minutes-input').value = '';
+      renderMinutesPresetGrid();
       document.getElementById('note-input').value = '';
       document.getElementById('day-dialog').showModal();
     }
@@ -614,6 +630,16 @@
         renderMuscleGrid();
       });
 
+      document.getElementById('minutes-preset-grid').addEventListener('click', e => {
+        const chip = e.target.closest('.type-chip');
+        if (!chip) return;
+        document.getElementById('minutes-input').value = chip.dataset.minutes;
+        renderMinutesPresetGrid();
+      });
+
+      // 手動輸入分鐘數時，如果剛好等於某個快速選項的數值就同步標示選中，否則都取消選中
+      document.getElementById('minutes-input').addEventListener('input', renderMinutesPresetGrid);
+
       document.getElementById('btn-add-type').addEventListener('click', async () => {
         const input = document.getElementById('new-type-input');
         const name = input.value.trim();
@@ -646,6 +672,7 @@
         if (!minutes || minutes <= 0) { alert('請輸入持續分鐘數'); return; }
         const btn = document.getElementById('btn-save-entry');
         btn.disabled = true;
+        btn.textContent = '儲存中...';
         const muscleGroups = calState.selectedMuscles.join(',');
         try {
           const { id } = await apiPost({
@@ -658,6 +685,7 @@
           renderCalendar();
           document.getElementById('add-form').style.display = 'none';
           document.getElementById('minutes-input').value = '';
+          renderMinutesPresetGrid();
           document.getElementById('note-input').value = '';
           calState.selectedType = null;
           calState.selectedMuscles = [];
@@ -666,6 +694,7 @@
           alert('儲存失敗，請確認網路連線後再試一次');
         } finally {
           btn.disabled = false;
+          btn.textContent = '儲存';
         }
       });
 
