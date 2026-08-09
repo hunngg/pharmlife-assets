@@ -23,6 +23,8 @@
       --tag-bg: #eef0f2;
       --radius: 10px;
       --shadow: 0 1px 3px rgba(0,0,0,0.06);
+      --dot: #e0554f;
+      --danger: #e0554f;
     }
     @media (prefers-color-scheme: dark) {
       :root {
@@ -35,6 +37,8 @@
         --accent-bg: #223245;
         --tag-bg: #262a31;
         --shadow: 0 1px 3px rgba(0,0,0,0.3);
+        --dot: #f19188;
+        --danger: #f19188;
       }
     }
     * { box-sizing: border-box; }
@@ -55,6 +59,13 @@
     header { margin-bottom: 24px; }
     h1 { font-size: 1.5rem; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.2px; }
     header p { margin: 0; color: var(--text-muted); font-size: 0.88rem; }
+    .section-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin: 0 0 12px;
+      color: var(--text);
+    }
+    section + section { margin-top: 28px; }
 
     .grid {
       display: grid;
@@ -136,6 +147,159 @@
 
     footer { margin-top: 32px; text-align: center; color: var(--text-muted); font-size: 0.75rem; }
 
+    /* ===== 運動紀錄日曆（嵌在首頁最上面）===== */
+    .month-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .month-bar h2 { font-size: 1.05rem; font-weight: 700; margin: 0; }
+    .nav-btn {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text);
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .calendar {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 10px;
+      box-shadow: var(--shadow);
+      touch-action: pan-y;
+      user-select: none;
+    }
+    .weekday-row, .day-row {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+    }
+    .weekday-row div {
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      padding-bottom: 8px;
+      font-weight: 600;
+    }
+    .day-cell {
+      position: relative;
+      text-align: center;
+      padding: 8px 0 10px;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .day-cell.empty { cursor: default; }
+    .day-cell:not(.empty):hover { background: var(--tag-bg); }
+    .day-cell.today .day-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+    }
+    .day-dot {
+      position: absolute;
+      bottom: 2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--dot);
+    }
+    .cal-stat-row { margin-top: 12px; text-align: center; font-size: 0.85rem; color: var(--text-muted); }
+    .cal-stat-row b { color: var(--accent); }
+
+    dialog {
+      border: none;
+      border-radius: var(--radius);
+      padding: 0;
+      width: calc(100% - 32px);
+      max-width: 420px;
+      background: var(--card-bg);
+      color: var(--text);
+    }
+    dialog::backdrop { background: rgba(0,0,0,0.4); }
+    .modal-body { padding: 20px; }
+    .modal-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 14px; }
+
+    .entry-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.88rem;
+    }
+    .entry-item:last-of-type { border-bottom: none; }
+    .entry-type { font-weight: 600; }
+    .entry-meta { color: var(--text-muted); font-size: 0.8rem; }
+    .entry-del {
+      border: none; background: none; color: var(--danger);
+      font-size: 1rem; cursor: pointer; padding: 4px 8px;
+    }
+
+    .type-grid {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin: 10px 0 14px;
+    }
+    .type-chip {
+      padding: 7px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--tag-bg);
+      color: var(--text);
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .type-chip.selected { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    .form-group { margin-bottom: 12px; }
+    .form-label { display: block; font-size: 0.82rem; color: var(--text-muted); margin-bottom: 5px; }
+    .form-input, .form-textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: inherit;
+    }
+    .form-textarea { min-height: 60px; resize: vertical; }
+
+    .btn {
+      display: inline-block;
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-primary { background: var(--accent); color: #fff; width: 100%; }
+    .btn-secondary { background: var(--tag-bg); color: var(--text); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+    .add-new-btn {
+      margin-top: 14px;
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px dashed var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
     @media (max-width: 480px) {
       .wrap { padding: calc(24px + env(safe-area-inset-top, 0px)) 14px calc(48px + env(safe-area-inset-bottom, 0px)); }
       .grid { grid-template-columns: 1fr; }
@@ -149,14 +313,293 @@
       <p>個人工作知識平台</p>
     </header>
 
-    <div class="grid" id="tool-grid"></div>
+    <!-- ===== 運動紀錄日曆 ===== -->
+    <section>
+      <p class="section-title">運動紀錄</p>
+      <div class="month-bar">
+        <button class="nav-btn" id="prev-month">‹</button>
+        <h2 id="month-label"></h2>
+        <button class="nav-btn" id="next-month">›</button>
+      </div>
+      <div class="calendar" id="calendar">
+        <div class="weekday-row">
+          <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+        </div>
+        <div class="day-row" id="day-grid" style="row-gap:4px;"></div>
+      </div>
+      <div class="cal-stat-row" id="cal-stat-row"></div>
+    </section>
+
+    <!-- ===== 工具卡片 ===== -->
+    <section>
+      <p class="section-title">工具</p>
+      <div class="grid" id="tool-grid"></div>
+    </section>
 
     <footer>共 <span id="tool-count">0</span> 項工具 · 之後會持續擴充</footer>
   </div>
 
+  <dialog id="day-dialog">
+    <div class="modal-body">
+      <div class="modal-title" id="dialog-date-title"></div>
+      <div id="entry-list"></div>
+      <button class="add-new-btn" id="btn-show-add">+ 記錄運動</button>
+
+      <div id="add-form" style="display:none; margin-top:14px;">
+        <div class="form-group">
+          <label class="form-label">運動類型</label>
+          <div class="type-grid" id="type-grid"></div>
+          <div style="display:flex; gap:8px;">
+            <input class="form-input" id="new-type-input" placeholder="自訂類型...">
+            <button class="btn btn-secondary" id="btn-add-type">新增</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">持續時間（分鐘）</label>
+          <input class="form-input" id="minutes-input" type="number" inputmode="numeric" placeholder="30">
+        </div>
+        <div class="form-group">
+          <label class="form-label">備註（可留空）</label>
+          <textarea class="form-textarea" id="note-input" placeholder="例如：操場慢跑"></textarea>
+        </div>
+        <button class="btn btn-primary" id="btn-save-entry">儲存</button>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="btn-close-dialog">關閉</button>
+      </div>
+    </div>
+  </dialog>
+
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbwbrwsQhfmS-ax0w7swR7ZoFZmjEQE6ircgsdzNI7mOQZVoxRE1HGDNtBfXku994JZt/exec';
 
+    /* ========================================================
+     * 運動紀錄日曆
+     * ==================================================== */
+    const DEFAULT_TYPES = ['跑步', '健走', '重訓', '瑜伽', '游泳', '騎車', '球類', '其他'];
+
+    let calState = {
+      records: [],
+      customTypes: [],
+      year: new Date().getFullYear(),
+      month: new Date().getMonth(),
+      selectedDate: null,
+      selectedType: null,
+    };
+
+    function pad2(n) { return String(n).padStart(2, '0'); }
+    function calDateStr(y, m, d) { return `${y}-${pad2(m + 1)}-${pad2(d)}`; }
+    function calTodayStr() { const d = new Date(); return calDateStr(d.getFullYear(), d.getMonth(), d.getDate()); }
+
+    async function apiList(module) {
+      const res = await fetch(`${API_URL}?module=${module}&action=list`);
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error);
+      return json.records;
+    }
+    async function apiPost(payload) {
+      const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error);
+      return json;
+    }
+
+    function allExerciseTypes() {
+      return [...DEFAULT_TYPES, ...calState.customTypes];
+    }
+
+    function renderMonthLabel() {
+      document.getElementById('month-label').textContent = `${calState.year}年 ${calState.month + 1}月`;
+    }
+
+    function renderCalendar() {
+      renderMonthLabel();
+      const grid = document.getElementById('day-grid');
+      const firstDay = new Date(calState.year, calState.month, 1).getDay();
+      const daysInMonth = new Date(calState.year, calState.month + 1, 0).getDate();
+      const today = calTodayStr();
+
+      const recordDates = new Set(calState.records.map(r => r.date));
+
+      let html = '';
+      for (let i = 0; i < firstDay; i++) html += `<div class="day-cell empty"></div>`;
+      for (let d = 1; d <= daysInMonth; d++) {
+        const ds = calDateStr(calState.year, calState.month, d);
+        const isToday = ds === today ? 'today' : '';
+        const hasRecord = recordDates.has(ds);
+        html += `
+          <div class="day-cell ${isToday}" data-date="${ds}">
+            <span class="day-num">${d}</span>
+            ${hasRecord ? '<span class="day-dot"></span>' : ''}
+          </div>`;
+      }
+      grid.innerHTML = html;
+
+      const prefix = `${calState.year}-${pad2(calState.month + 1)}`;
+      const monthRecords = calState.records.filter(r => r.date.startsWith(prefix));
+      const monthDays = new Set(monthRecords.map(r => r.date)).size;
+      document.getElementById('cal-stat-row').innerHTML =
+        `本月已運動 <b>${monthDays}</b> 天 · 共 <b>${monthRecords.length}</b> 筆紀錄`;
+    }
+
+    function changeMonth(delta) {
+      let m = calState.month + delta;
+      let y = calState.year;
+      if (m < 0) { m = 11; y--; }
+      if (m > 11) { m = 0; y++; }
+      calState.month = m; calState.year = y;
+      renderCalendar();
+    }
+
+    function renderTypeGrid() {
+      const grid = document.getElementById('type-grid');
+      grid.innerHTML = allExerciseTypes().map(t =>
+        `<button type="button" class="type-chip ${calState.selectedType === t ? 'selected' : ''}" data-type="${t}">${t}</button>`
+      ).join('');
+    }
+
+    function openDayDialog(ds) {
+      calState.selectedDate = ds;
+      calState.selectedType = null;
+      document.getElementById('dialog-date-title').textContent = ds;
+      renderEntryList();
+      document.getElementById('add-form').style.display = 'none';
+      renderTypeGrid();
+      document.getElementById('minutes-input').value = '';
+      document.getElementById('note-input').value = '';
+      document.getElementById('day-dialog').showModal();
+    }
+
+    function renderEntryList() {
+      const entries = calState.records.filter(r => r.date === calState.selectedDate);
+      const list = document.getElementById('entry-list');
+      if (entries.length === 0) {
+        list.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">這天還沒有紀錄</p>`;
+        return;
+      }
+      list.innerHTML = entries.map(e => `
+        <div class="entry-item">
+          <div>
+            <div class="entry-type">${e.type}</div>
+            <div class="entry-meta">${e.minutes} 分鐘${e.note ? ' · ' + e.note : ''}</div>
+          </div>
+          <button class="entry-del" data-del-id="${e.id}" title="刪除">✕</button>
+        </div>
+      `).join('');
+    }
+
+    async function loadCalendarData() {
+      try {
+        const [records, types] = await Promise.all([apiList('exercise'), apiList('exerciseTypes')]);
+        calState.records = records;
+        calState.customTypes = types.map(t => t.name);
+      } catch (e) {
+        console.error(e);
+        document.getElementById('cal-stat-row').textContent = '無法載入資料，請確認網路連線';
+      }
+      renderCalendar();
+    }
+
+    function setupCalendarSwipe() {
+      const cal = document.getElementById('calendar');
+      let startX = null;
+      cal.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+      cal.addEventListener('touchend', e => {
+        if (startX == null) return;
+        const dx = e.changedTouches[0].clientX - startX;
+        if (Math.abs(dx) > 50) changeMonth(dx > 0 ? -1 : 1);
+        startX = null;
+      }, { passive: true });
+    }
+
+    function setupCalendarEvents() {
+      document.getElementById('prev-month').addEventListener('click', () => changeMonth(-1));
+      document.getElementById('next-month').addEventListener('click', () => changeMonth(1));
+
+      document.getElementById('day-grid').addEventListener('click', e => {
+        const cell = e.target.closest('.day-cell:not(.empty)');
+        if (!cell) return;
+        openDayDialog(cell.dataset.date);
+      });
+
+      document.getElementById('btn-show-add').addEventListener('click', () => {
+        document.getElementById('add-form').style.display = 'block';
+      });
+
+      document.getElementById('type-grid').addEventListener('click', e => {
+        const chip = e.target.closest('.type-chip');
+        if (!chip) return;
+        calState.selectedType = chip.dataset.type;
+        renderTypeGrid();
+      });
+
+      document.getElementById('btn-add-type').addEventListener('click', async () => {
+        const input = document.getElementById('new-type-input');
+        const name = input.value.trim();
+        if (!name) return;
+        if (allExerciseTypes().includes(name)) { calState.selectedType = name; renderTypeGrid(); input.value = ''; return; }
+        try {
+          await apiPost({ module: 'exerciseTypes', action: 'add', name });
+          calState.customTypes.push(name);
+          calState.selectedType = name;
+          renderTypeGrid();
+          input.value = '';
+        } catch (e) {
+          alert('新增類型失敗，請確認網路連線');
+        }
+      });
+
+      document.getElementById('btn-save-entry').addEventListener('click', async () => {
+        const minutes = parseInt(document.getElementById('minutes-input').value, 10);
+        const note = document.getElementById('note-input').value.trim();
+        if (!calState.selectedType) { alert('請選擇運動類型'); return; }
+        if (!minutes || minutes <= 0) { alert('請輸入持續分鐘數'); return; }
+        const btn = document.getElementById('btn-save-entry');
+        btn.disabled = true;
+        try {
+          const { id } = await apiPost({
+            module: 'exercise', action: 'add',
+            date: calState.selectedDate, type: calState.selectedType, minutes, note,
+          });
+          const now = new Date().toISOString();
+          calState.records.push({ id, date: calState.selectedDate, type: calState.selectedType, minutes, note, createdAt: now, updatedAt: now });
+          renderEntryList();
+          renderCalendar();
+          document.getElementById('add-form').style.display = 'none';
+          document.getElementById('minutes-input').value = '';
+          document.getElementById('note-input').value = '';
+          calState.selectedType = null;
+        } catch (e) {
+          alert('儲存失敗，請確認網路連線後再試一次');
+        } finally {
+          btn.disabled = false;
+        }
+      });
+
+      document.getElementById('entry-list').addEventListener('click', async e => {
+        const btn = e.target.closest('[data-del-id]');
+        if (!btn) return;
+        if (!confirm('確定要刪除這筆運動紀錄嗎？')) return;
+        const id = btn.dataset.delId;
+        try {
+          await apiPost({ module: 'exercise', action: 'delete', id });
+          calState.records = calState.records.filter(r => r.id !== id);
+          renderEntryList();
+          renderCalendar();
+        } catch (e) {
+          alert('刪除失敗，請確認網路連線後再試一次');
+        }
+      });
+
+      document.getElementById('btn-close-dialog').addEventListener('click', () => {
+        document.getElementById('day-dialog').close();
+      });
+    }
+
+    /* ========================================================
+     * 工具卡片
+     * ==================================================== */
     const TOOLS = [
       {
         key: 'worklog',
@@ -206,22 +649,6 @@
           return { text: `曝險倍率 ${ratio}`, stockPct: hasAlloc ? stockPct : null, cashPct: hasAlloc ? cashPct : null };
         },
       },
-      {
-        key: 'exercise',
-        name: '運動紀錄',
-        desc: '左右滑動月曆，記錄每天的運動類型與時間',
-        url: `${API_URL}?page=exercise`,
-        loadStat: async () => {
-          const res = await fetch(`${API_URL}?module=exercise&action=list`);
-          const json = await res.json();
-          if (!json.ok) throw new Error(json.error);
-          if (json.records.length === 0) return '尚未有紀錄';
-          const now = new Date();
-          const prefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-          const monthDays = new Set(json.records.filter(r => r.date.startsWith(prefix)).map(r => r.date)).size;
-          return `本月已運動 ${monthDays} 天`;
-        },
-      },
     ];
 
     function renderCard(tool) {
@@ -256,7 +683,7 @@
         </div>`;
     }
 
-    async function init() {
+    async function initTools() {
       const grid = document.getElementById('tool-grid');
       grid.innerHTML = TOOLS.map(renderCard).join('');
       document.getElementById('tool-count').textContent = TOOLS.length;
@@ -275,7 +702,10 @@
       }
     }
 
-    init();
+    setupCalendarSwipe();
+    setupCalendarEvents();
+    loadCalendarData();
+    initTools();
   </script>
 </body>
 </html>
