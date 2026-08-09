@@ -205,14 +205,18 @@
       background: var(--accent);
       color: #fff;
     }
+    .day-dots {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 3px;
+      height: 6px;
+      margin-top: 3px;
+    }
     .day-dot {
-      position: absolute;
-      bottom: 2px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 6px; height: 6px;
+      width: 5px; height: 5px;
       border-radius: 50%;
-      background: var(--dot);
+      flex-shrink: 0;
     }
     .cal-stat-row { margin-top: 12px; text-align: center; font-size: 0.85rem; color: var(--text-muted); }
     .cal-stat-row b { color: var(--accent); }
@@ -260,6 +264,7 @@
       cursor: pointer;
     }
     .type-chip.selected { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .type-chip#type-chip-other { background: transparent; border-style: dashed; color: var(--text-muted); }
 
     .form-group { margin-bottom: 12px; }
     .form-label { display: block; font-size: 0.82rem; color: var(--text-muted); margin-bottom: 5px; }
@@ -349,8 +354,8 @@
         <div class="form-group">
           <label class="form-label">運動類型</label>
           <div class="type-grid" id="type-grid"></div>
-          <div style="display:flex; gap:8px;">
-            <input class="form-input" id="new-type-input" placeholder="自訂類型...">
+          <div id="new-type-row" style="display:none; gap:8px;">
+            <input class="form-input" id="new-type-input" placeholder="輸入新類型名稱...">
             <button class="btn btn-secondary" id="btn-add-type">新增</button>
           </div>
         </div>
@@ -377,7 +382,24 @@
     /* ========================================================
      * 運動紀錄日曆
      * ==================================================== */
-    const DEFAULT_TYPES = ['跑步', '健走', '重訓', '瑜伽', '游泳', '騎車', '球類', '其他'];
+    // 「其他」不放在這裡當一般選項，改成按下去才跳出新增自訂類型的輸入框（見 renderTypeGrid）
+    const DEFAULT_TYPES = ['跑步', '健走', '重訓', '瑜伽', '游泳', '醫院體育課', '健工教練課'];
+
+    // 每種類型對應的日曆紅點顏色：重訓/健工教練課共用一色、跑步/健走/游泳共用一色、
+    // 瑜伽自己一色、醫院體育課跟其他(含自訂類型)共用一色當預設
+    const TYPE_COLORS = {
+      '重訓': '#e0554f',
+      '健工教練課': '#e0554f',
+      '跑步': '#3b82c4',
+      '健走': '#3b82c4',
+      '游泳': '#3b82c4',
+      '瑜伽': '#9b6bd1',
+      '醫院體育課': '#9aa5b1',
+      '其他': '#9aa5b1',
+    };
+    function typeColor(type) {
+      return TYPE_COLORS[type] || '#9aa5b1'; // 自訂類型預設跟「其他」同一色
+    }
 
     let calState = {
       records: [],
@@ -386,6 +408,7 @@
       month: new Date().getMonth(),
       selectedDate: null,
       selectedType: null,
+      showCustomTypeInput: false,
     };
 
     function pad2(n) { return String(n).padStart(2, '0'); }
@@ -420,18 +443,18 @@
       const daysInMonth = new Date(calState.year, calState.month + 1, 0).getDate();
       const today = calTodayStr();
 
-      const recordDates = new Set(calState.records.map(r => r.date));
-
       let html = '';
       for (let i = 0; i < firstDay; i++) html += `<div class="day-cell empty"></div>`;
       for (let d = 1; d <= daysInMonth; d++) {
         const ds = calDateStr(calState.year, calState.month, d);
         const isToday = ds === today ? 'today' : '';
-        const hasRecord = recordDates.has(ds);
+        const dayRecords = calState.records.filter(r => r.date === ds);
+        const colors = [...new Set(dayRecords.map(r => typeColor(r.type)))];
+        const dotsHtml = colors.map(c => `<span class="day-dot" style="background:${c}"></span>`).join('');
         html += `
           <div class="day-cell ${isToday}" data-date="${ds}">
             <span class="day-num">${d}</span>
-            ${hasRecord ? '<span class="day-dot"></span>' : ''}
+            <div class="day-dots">${dotsHtml}</div>
           </div>`;
       }
       grid.innerHTML = html;
@@ -454,17 +477,23 @@
 
     function renderTypeGrid() {
       const grid = document.getElementById('type-grid');
-      grid.innerHTML = allExerciseTypes().map(t =>
+      const chips = allExerciseTypes().map(t =>
         `<button type="button" class="type-chip ${calState.selectedType === t ? 'selected' : ''}" data-type="${t}">${t}</button>`
       ).join('');
+      // 「其他」不是一般類型，按下去是跳出新增自訂類型的輸入框
+      const otherChip = `<button type="button" class="type-chip" id="type-chip-other">其他</button>`;
+      grid.innerHTML = chips + otherChip;
     }
 
     function openDayDialog(ds) {
       calState.selectedDate = ds;
       calState.selectedType = null;
+      calState.showCustomTypeInput = false;
       document.getElementById('dialog-date-title').textContent = ds;
       renderEntryList();
       document.getElementById('add-form').style.display = 'none';
+      document.getElementById('new-type-row').style.display = 'none';
+      document.getElementById('new-type-input').value = '';
       renderTypeGrid();
       document.getElementById('minutes-input').value = '';
       document.getElementById('note-input').value = '';
@@ -528,6 +557,14 @@
       });
 
       document.getElementById('type-grid').addEventListener('click', e => {
+        const otherChip = e.target.closest('#type-chip-other');
+        if (otherChip) {
+          // 「其他」不是可選類型，按下去跳出新增自訂類型的輸入框
+          const row = document.getElementById('new-type-row');
+          row.style.display = 'flex';
+          document.getElementById('new-type-input').focus();
+          return;
+        }
         const chip = e.target.closest('.type-chip');
         if (!chip) return;
         calState.selectedType = chip.dataset.type;
@@ -538,13 +575,20 @@
         const input = document.getElementById('new-type-input');
         const name = input.value.trim();
         if (!name) return;
-        if (allExerciseTypes().includes(name)) { calState.selectedType = name; renderTypeGrid(); input.value = ''; return; }
+        if (allExerciseTypes().includes(name)) {
+          calState.selectedType = name;
+          renderTypeGrid();
+          input.value = '';
+          document.getElementById('new-type-row').style.display = 'none';
+          return;
+        }
         try {
           await apiPost({ module: 'exerciseTypes', action: 'add', name });
           calState.customTypes.push(name);
           calState.selectedType = name;
           renderTypeGrid();
           input.value = '';
+          document.getElementById('new-type-row').style.display = 'none';
         } catch (e) {
           alert('新增類型失敗，請確認網路連線');
         }
